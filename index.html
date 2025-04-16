@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Surpresa de Aniversário</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            font-family: 'Arial', 'Helvetica', 'Roboto', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            min-height: 100vh;
+            width: 100%;
+            /* Removido overflow: hidden para permitir rolagem */
+        }
+        
+        html {
+            height: 100%;
+            width: 100%;
+        }
+        
+        .container {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start; /* Alterado para flex-start */
+            align-items: center;
+            position: relative;
+            padding-bottom: 100px; /* Adicionado espaço na parte inferior */
+            overflow-y: auto; /* Permitir rolagem vertical */
+        }
+        
+        /* Cortinas */
+        .curtains {
+            width: 100%;
+            height: 100vh;
+            position: fixed; /* Fixado no topo */
+            top: 0;
+            left: 0;
+            z-index: 100;
+            display: flex;
+            pointer-events: none; /* Impede que as cortinas bloqueiem o toque */
+        }
+        
+        .curtain-left, .curtain-right {
+            width: 50%;
+            height: 100%;
+            background-color: #9b0a0a;
+            transition: transform 3s ease-in-out;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .curtain-left {
+            transform-origin: left;
+        }
+        
+        .curtain-right {
+            transform-origin: right;
+        }
+        
+        .curtain-left.open {
+            transform: translateX(-100%);
+        }
+        
+        .curtain-right.open {
+            transform: translateX(100%);
+        }
+        
+        .curtain-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                to right,
+                rgba(0, 0, 0, 0.1),
+                rgba(0, 0, 0, 0.1) 10px,
+                rgba(0, 0, 0, 0.2) 10px,
+                rgba(0, 0, 0, 0.2) 20px
+            );
+        }
+        
+        /* Cartões */
+        .cards-container {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            transform: translateY(100vh);
+            transition: transform 2s ease-out;
+            z-index: 50;
+            flex-wrap: wrap;
+            max-width: 95%;
+            margin: 80px auto 0; /* Aumentado margin-top para dar espaço ao título */
+            position: relative; /* Adicionado */
+        }
+        
+        @media (max-width: 1200px) {
+            .cards-container {
+                gap: 20px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .cards-container {
+                flex-direction: column;
+                align-items: center;
+                margin-top: 120px; /* Aumentado para dar mais espaço */
+            }
+            
+            .card {
+                margin-bottom: 30px; /* Aumentado espaçamento entre cards */
+                width: 90%;
+                max-width: 320px;
+            }
+            
+            .title {
+                font-size: 32px; /* Tamanho reduzido para telas menores */
+                top: 60px; /* Posição ajustada */
+                width: 90%;
+                position: fixed; /* Fixar título */
+                background-color: rgba(240, 240, 240, 0.9); /* Fundo semi-transparente */
+                padding: 10px 0;
+                margin: 0;
+                z-index: 51; /* Acima dos cartões */
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .title {
+                font-size: 28px;
+                top: 50px;
+            }
+            
+            .cards-container {
+                margin-top: 110px;
+            }
+        }
+        
+        .cards-container.show {
+            transform: translateY(0);
+        }
+        
+        .card {
+            width: 320px; /* Reduzido ligeiramente */
+            min-height: 450px; /* Usado min-height em vez de height fixo */
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.3s ease;
+            overflow: hidden;
+            border: 1px solid #c62828;
+            margin-bottom: 20px;
+            box-sizing: border-box; /* Para que o padding não seja adicionado à largura */
+        }
+        
+        .card:hover {
+            transform: translateY(-15px);
+        }
+        
+        .card-image {
+            width: 100%; /* Alterado para 100% da largura do card */
+            height: 350px; /* Altura um pouco menor */
+            background-size: cover; /* Alterado para cover */
+            background-position: center;
+            background-repeat: no-repeat;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .card h2 {
+            color: #c62828;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+        
+        .card p {
+            color: #c62828;
+            font-size: 18px;
+            line-height: 1.5;
+            font-style: italic;
+        }
+        
+        .card {
+            position: relative;
+        }
+        
+        .card::before,
+        .card::after {
+            content: '';
+            position: absolute;
+            top: 15px;
+            bottom: 15px;
+            left: 15px;
+            right: 15px;
+            border: 1px solid #c62828;
+            pointer-events: none;
+        }
+        
+        .card-heart {
+            color: #c62828;
+            font-size: 24px;
+            position: absolute;
+        }
+        
+        .heart-top-left {
+            top: 10px;
+            left: 10px;
+        }
+        
+        .heart-top-right {
+            top: 10px;
+            right: 10px;
+        }
+        
+        .heart-bottom-left {
+            bottom: 10px;
+            left: 10px;
+        }
+        
+        .heart-bottom-right {
+            bottom: 10px;
+            right: 10px;
+        }
+        
+        /* Botão de começar */
+        .start-button {
+            position: fixed; /* Alterado para fixed */
+            z-index: 200;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 15px 30px;
+            background-color: #ff4081;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 18px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .start-button:hover {
+            background-color: #ff6699;
+            transform: translate(-50%, -55%);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .start-button:active {
+            background-color: #e91e63;
+            transform: translate(-50%, -50%) scale(0.98);
+        }
+        
+        .start-button.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        /* Confetes */
+        .confetti {
+            position: fixed; /* Alterado para fixed */
+            width: 15px;
+            height: 15px;
+            background-color: #f00;
+            animation: fall linear forwards;
+            z-index: 60;
+        }
+        
+        @keyframes fall {
+            to {
+                transform: translateY(100vh);
+            }
+        }
+        
+        /* Título de Feliz Aniversário */
+        .title {
+            position: absolute;
+            top: 5%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 50px;
+            font-weight: bold;
+            color: #c62828;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transition: opacity 2s ease;
+            z-index: 50;
+            text-align: center;
+            width: 90%;
+        }
+        
+        .title.show {
+            opacity: 1;
+        }
+        
+        /* Controles de áudio */
+        .audio-controls {
+            position: fixed; /* Alterado para fixed */
+            bottom: 20px;
+            right: 20px;
+            z-index: 150;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .audio-controls button {
+            background-color: rgba(255, 255, 255, 0.7);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .audio-controls button:hover {
+            background-color: rgba(255, 255, 255, 1);
+        }
+        
+        /* Novo estilo para tela carregada */
+        .loaded .cards-container {
+            position: relative;
+            margin-top: 120px; /* Espaço para o título */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Feliz Aniversário Mamãe!</h1>
+        
+        <div class="curtains">
+            <div class="curtain-left">
+                <div class="curtain-pattern"></div>
+            </div>
+            <div class="curtain-right">
+                <div class="curtain-pattern"></div>
+            </div>
+        </div>
+        
+        <div class="cards-container">
+            <div class="card">
+                <div class="card-image" style="background-image: url('Imagem\ do\ WhatsApp\ de\ 2025-04-13\ à\(s\)\ 21.53.55_f17f52ac.jpg');"></div>
+                <span class="card-heart heart-top-left">❤</span>
+                <span class="card-heart heart-top-right">❤</span>
+                <span class="card-heart heart-bottom-left">❤</span>
+                <span class="card-heart heart-bottom-right">❤</span>
+                <h2>Mãe,</h2>
+                <p>Eu amo a senhora muito e eu te amo. Tenho orgulho de você! Obrigado por ter você na minha vida!</p>
+            </div>
+            
+            <div class="card">
+                <div class="card-image" style="background-image: url('Imagem\ do\ WhatsApp\ de\ 2025-04-13\ à\(s\)\ 21.54.01_6aff9e43.jpg');"></div>
+                <span class="card-heart heart-top-left">❤</span>
+                <span class="card-heart heart-top-right">❤</span>
+                <span class="card-heart heart-bottom-left">❤</span>
+                <span class="card-heart heart-bottom-right">❤</span>
+                <h2>Com Carinho</h2>
+                <p>Neste dia especial, desejo que sua vida seja repleta de momentos inesquecíveis e realizações. Que este novo ano traga saúde, amor e muitas conquistas!</p>
+            </div>
+            
+            <div class="card">
+                <div class="card-image" style="background-image: url('Imagem\ do\ WhatsApp\ de\ 2025-04-13\ à\(s\)\ 21.54.46_9b71b36f.jpg');"></div>
+                <span class="card-heart heart-top-left">❤</span>
+                <span class="card-heart heart-top-right">❤</span>
+                <span class="card-heart heart-bottom-left">❤</span>
+                <span class="card-heart heart-bottom-right">❤</span>
+                <h2>Felicidades</h2>
+                <p>Parabéns por mais um ano de vida! Que seus sonhos se realizem e que você encontre sempre motivos para sorrir e ser feliz. Você merece o melhor!</p>
+            </div>
+        </div>
+        
+        <button class="start-button">Começar Surpresa</button>
+        
+        <div class="audio-controls">
+            <button id="pauseButton" title="Pausar música">❚❚</button>
+            <button id="playButton" title="Tocar música">▶</button>
+        </div>
+    </div>
+    
+    <audio id="bgMusic" preload="auto" loop>
+        <source src="Anavitória & Jorge Drexler - Lisboa-Madrid.mp3" type="audio/ogg">
+        Seu navegador não suporta áudio HTML5.
+    </audio>
+    
+    <script>
+        // Detectar tipo de dispositivo para otimizações
+        function detectDevice() {
+            const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+            
+            // Verificar se é dispositivo móvel
+            if (/android/i.test(userAgent) || /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+                document.body.classList.add('mobile-device');
+                return 'mobile';
+            } else {
+                document.body.classList.add('desktop-device');
+                return 'desktop';
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Detectar dispositivo
+            const deviceType = detectDevice();
+            const startButton = document.querySelector('.start-button');
+            const curtainLeft = document.querySelector('.curtain-left');
+            const curtainRight = document.querySelector('.curtain-right');
+            const cardsContainer = document.querySelector('.cards-container');
+            const title = document.querySelector('.title');
+            const audio = document.getElementById('bgMusic');
+            const pauseButton = document.getElementById('pauseButton');
+            const playButton = document.getElementById('playButton');
+            const container = document.querySelector('.container');
+            
+            // Forçar scroll para o topo ao carregar
+            window.scrollTo(0, 0);
+            
+            // Controles de áudio com suporte a touch
+            addClickOrTouchListener(pauseButton, function() {
+                audio.pause();
+            });
+            
+            addClickOrTouchListener(playButton, function() {
+                // Lidar com reprodução automática bloqueada em iOS/Safari
+                var promise = audio.play();
+                
+                if (promise !== undefined) {
+                    promise.catch(function(error) {
+                        console.log('Reprodução automática bloqueada pelo navegador.');
+                    });
+                }
+            });
+            
+            // Função para criar confetes
+            function createConfetti(amount = 100) {
+                const confettiColors = ['#ff4081', '#03a9f4', '#ffc107', '#8bc34a', '#e91e63', '#673ab7'];
+                
+                for (let i = 0; i < amount; i++) {
+                    setTimeout(() => {
+                        const confetti = document.createElement('div');
+                        confetti.classList.add('confetti');
+                        
+                        // Posição horizontal aleatória
+                        const left = Math.random() * 100;
+                        confetti.style.left = left + '%';
+                        
+                        // Tamanho aleatório
+                        const size = Math.random() * 8 + 5;
+                        confetti.style.width = size + 'px';
+                        confetti.style.height = size + 'px';
+                        
+                        // Cor aleatória
+                        const colorIndex = Math.floor(Math.random() * confettiColors.length);
+                        confetti.style.backgroundColor = confettiColors[colorIndex];
+                        
+                        // Forma aleatória
+                        const shapes = ['', '50%'];
+                        const shapeIndex = Math.floor(Math.random() * shapes.length);
+                        confetti.style.borderRadius = shapes[shapeIndex];
+                        
+                        // Duração da animação aleatória
+                        const duration = Math.random() * 3 + 2;
+                        confetti.style.animationDuration = duration + 's';
+                        
+                        // Adicionar ao container
+                        document.body.appendChild(confetti);
+                        
+                        // Remover após a animação
+                        setTimeout(() => {
+                            if (document.body.contains(confetti)) {
+                                document.body.removeChild(confetti);
+                            }
+                        }, duration * 1000);
+                        
+                    }, i * 100);
+                }
+            }
+            
+            // Garantir suporte a touch para dispositivos móveis
+            function addClickOrTouchListener(element, callback) {
+                element.addEventListener('click', callback);
+                element.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    callback(e);
+                });
+            }
+            
+            // Iniciar a animação
+            addClickOrTouchListener(startButton, function(e) {
+                startButton.classList.add('hidden');
+                
+                // Adicionar classe para o corpo após carregamento
+                document.body.classList.add('loaded');
+                
+                // Abrir cortinas
+                curtainLeft.classList.add('open');
+                curtainRight.classList.add('open');
+                
+                // Mostrar título antes dos cartões
+                setTimeout(() => {
+                    title.classList.add('show');
+                }, 1000);
+                
+                // Habilitar rolagem após as cortinas abrirem
+                setTimeout(() => {
+                    // Remover qualquer bloqueio de rolagem que possa ter sido aplicado
+                    document.body.style.overflow = 'auto';
+                    container.style.overflowY = 'auto';
+                }, 2000);
+                
+                // Mostrar cartões após tempo para cortinas abrirem completamente
+                setTimeout(() => {
+                    cardsContainer.classList.add('show');
+                    
+                    // Tentar reproduzir áudio com fallback para dispositivos com políticas estritas
+                    var promise = audio.play();
+                    
+                    if (promise !== undefined) {
+                        promise.catch(function(error) {
+                            console.log('Reprodução automática bloqueada pelo navegador.');
+                            
+                            // Criar um botão flutuante para iniciar o áudio
+                            const audioBtn = document.createElement('button');
+                            audioBtn.style.position = 'fixed';
+                            audioBtn.style.bottom = '80px';
+                            audioBtn.style.right = '20px';
+                            audioBtn.style.zIndex = '999';
+                            audioBtn.style.padding = '10px';
+                            audioBtn.style.background = '#ff4081';
+                            audioBtn.style.color = 'white';
+                            audioBtn.style.border = 'none';
+                            audioBtn.style.borderRadius = '50%';
+                            audioBtn.style.width = '50px';
+                            audioBtn.style.height = '50px';
+                            audioBtn.style.cursor = 'pointer';
+                            audioBtn.innerHTML = '🎵';
+                            
+                            document.body.appendChild(audioBtn);
+                            
+                            audioBtn.addEventListener('click', function() {
+                                audio.play();
+                                document.body.removeChild(audioBtn);
+                            });
+                        });
+                    }
+                    
+                    // Ajustar quantidade de confetes baseado no dispositivo
+                    if (deviceType === 'mobile') {
+                        // Menos confetes para dispositivos móveis (melhor performance)
+                        createConfetti(30);
+                    } else {
+                        createConfetti(70);
+                    }
+                }, 3000);
+            });
+            
+            // Evento de rolagem para garantir que elementos fiquem visíveis
+            window.addEventListener('scroll', function() {
+                // Se as cortinas já estiverem abertas, mantém o título visível com classe fixa
+                if (curtainLeft.classList.contains('open')) {
+                    if (window.scrollY > 10) {
+                        title.style.position = 'fixed';
+                        title.style.top = '10px';
+                        title.style.backgroundColor = 'rgba(240, 240, 240, 0.9)';
+                        title.style.padding = '10px 0';
+                        title.style.borderRadius = '10px';
+                    } else {
+                        title.style.position = '';
+                        title.style.top = '';
+                        title.style.backgroundColor = '';
+                        title.style.padding = '';
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
